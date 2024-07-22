@@ -7,7 +7,7 @@ import (
 )
 
 func (r *BookCategoryRepo) DeleteBookCategory(bookCategoryID string) error {
-	result := r.DB.Delete(&models.BookCategory{}, bookCategoryID)
+	result := r.DB.Unscoped().Delete(&models.BookCategory{}, bookCategoryID)
 	if result.Error != nil {
 		return result.Error
 	}

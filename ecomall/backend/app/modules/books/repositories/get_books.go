@@ -9,7 +9,7 @@ import (
 )
 
 func (r *BookRepo) GetBooks(c *gin.Context, user *models.User, query models.BookQueryParams) ([]*models.Book, *pagination.Paginator, error) {
-	paginator := middleware.InitPaginator(c, r.DB, &models.Book{}, 1)
+	paginator := middleware.InitPaginator(c, r.DB, &models.Book{}, 10)
 
 	books := []*models.Book{}
 	result := r.DB.Model(&models.Book{}).Preload("BookCategory").Where("user_id = ?", user.ID)
