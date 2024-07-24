@@ -9,6 +9,7 @@ COPY .. /app
 RUN go mod download
 
 RUN go install -mod=mod github.com/githubnemo/CompileDaemon
+RUN go install go.uber.org/mock/mockgen@latest
 
 EXPOSE 9092
 

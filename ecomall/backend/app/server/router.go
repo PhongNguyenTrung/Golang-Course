@@ -17,6 +17,7 @@ import (
 
 func SetupRoutes(server *Server) {
 	api := server.Gin.Group("/api/v1")
+	api.Static("/uploads", "./uploads")
 	SetUserRoutes(server, api)
 	SetBookCategoryRoutes(server, api)
 	SetBookRoutes(server, api)
