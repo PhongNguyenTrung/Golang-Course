@@ -30,9 +30,9 @@ type BookParams struct {
 }
 
 type BookQueryParams struct {
-	Title          string `form:"title" json:"title"`
-	Author         string `form:"author" json:"author"`
-	BookCategoryID uint   `form:"book_category_id" json:"book_category_id"`
+	Title          string `form:"title" json:"title,omitempty"`
+	Author         string `form:"author" json:"author,omitempty"`
+	BookCategoryID uint   `form:"book_category_id" json:"book_category_id,omitempty"`
 }
 
 type BookResponse struct {

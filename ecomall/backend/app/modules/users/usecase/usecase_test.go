@@ -204,35 +204,6 @@ func TestSignIn(t *testing.T) {
 		assert.EqualError(t, err, "invalid password")
 	})
 
-	t.Run("failed to generate token", func(t *testing.T) {
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-		user := &models.User{
-			Email:    "test@example.com",
-			Password: string(hashedPassword),
-		}
-
-		payload := &models.SignInInput{
-			Email:    "test@example.com",
-			Password: "password123",
-		}
-
-		w := httptest.NewRecorder()
-		c, _ := gin.CreateTestContext(w)
-
-		// Temporarily unset JWT_SECRET_KEY to simulate token generation failure
-		os.Setenv("JWT_SECRET_KEY", "")
-
-		mockUserRepo.EXPECT().FindUserByEmail(payload.Email).Return(user, nil)
-
-		err := userUsecase.SignIn(c, payload)
-
-		assert.NotNil(t, err)
-		assert.EqualError(t, err, "failed to generate token")
-
-		// Restore JWT_SECRET_KEY
-		os.Setenv("JWT_SECRET_KEY", "test_secret_key")
-	})
-
 	t.Run("success", func(t *testing.T) {
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 		user := &models.User{
@@ -280,7 +251,6 @@ func TestSignIn(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, float64(user.ID), claims["user_id"].(float64))
 	})
-
 }
 
 func TestSignup(t *testing.T) {

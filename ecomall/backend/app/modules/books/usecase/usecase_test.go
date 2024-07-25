@@ -2,7 +2,9 @@ package usecase_test
 
 import (
 	"errors"
+	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	mocks "github.com/1rhino/clean_architecture/app/mocks/books"
@@ -208,20 +210,16 @@ func TestGetBooks(t *testing.T) {
 			{Title: "Test Book 2", Author: "Test Author 2"},
 		}
 
-		booksParams := &models.BookParams{
+		booksParams := models.BookQueryParams{
 			Title:  "Test Book",
 			Author: "Test Author",
 		}
 
-		paginator := &pagination.Paginator{
-			// CurrentPage: 1,
-			// TotalPages:  1,
-			// TotalItems:  2,
-			// PageSize:    2,
-		}
+		paginator := &pagination.Paginator{}
 
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
+		c.Request = BooksListRequest(booksParams)
 		c.Set("user", user)
 
 		mockBookRepo.EXPECT().GetBooks(c, user, booksParams).Return(books, paginator, nil)
@@ -232,7 +230,7 @@ func TestGetBooks(t *testing.T) {
 		assert.NotNil(t, result)
 		assert.NotNil(t, pag)
 		assert.Equal(t, books, result)
-		// assert.Equal(t, paginator, pag)
+		assert.Equal(t, paginator, pag)
 	})
 
 	t.Run("user not set in context", func(t *testing.T) {
@@ -251,8 +249,14 @@ func TestGetBooks(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Set("user", user)
-		c.Request = httptest.NewRequest("GET", "/books?invalid_param=true", nil)
+		c.Request = BooksListRequest(models.BookQueryParams{Title: "Test Book", Author: "Test Author"})
 
+		expectedParams := models.BookQueryParams{
+			Title:  "Test Book",
+			Author: "Test Author",
+		}
+
+		mockBookRepo.EXPECT().GetBooks(c, user, expectedParams).Return(nil, nil, errors.New("get books error"))
 		_, _, err := bookUsecase.GetBooks(c)
 
 		assert.NotNil(t, err)
@@ -267,8 +271,9 @@ func TestGetBooks(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Set("user", user)
+		c.Request = BooksListRequest(models.BookQueryParams{Title: "Test Book", Author: "Test Author"})
 
-		mockBookRepo.EXPECT().GetBooks(c, user, models.BookQueryParams{}).Return(nil, nil, errors.New("get books error"))
+		mockBookRepo.EXPECT().GetBooks(c, user, models.BookQueryParams{Title: "Test Book", Author: "Test Author"}).Return(nil, nil, errors.New("get books error"))
 
 		result, pag, err := bookUsecase.GetBooks(c)
 
@@ -359,4 +364,12 @@ func TestUpdateBook(t *testing.T) {
 		assert.NotNil(t, err)
 		assert.EqualError(t, err, "update book error")
 	})
+}
+
+func BooksListRequest(bookQueryParams models.BookQueryParams) *http.Request {
+	query := url.Values{}
+	query.Set("title", bookQueryParams.Title)
+	query.Set("author", bookQueryParams.Author)
+
+	return httptest.NewRequest("GET", "/books?"+query.Encode(), nil)
 }
